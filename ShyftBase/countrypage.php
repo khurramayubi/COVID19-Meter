@@ -35,15 +35,20 @@
 
         <h1 style="text-align: center; margin-top: 200px"> Charts </h1>
     <div class="graph-wrapper">
-    <h2><u>New cases</u></h2>
+    <h2><u>Confirmed cases</u></h2>
     <div id="curve_chart" style="width: 900px; height: 500px"></div>
 
 </div>
 
 <?php
-/* Selection of dates feature is not currently working properly. 
+/* TODO1: Selection of dates feature is not currently working properly. 
     Need to grab dates from the form and then pass them for the graph generation. 
 */
+
+/* TODO2: Need to add more graphs for visual representations. THey should allbe pretty similar to the one generated. 
+
+*/
+
     if(isset($_POST['submit'])){
         $term = $_POST['searchterm'];
         echo "<script>document.getElementById('countryname').innerHTML = '".$term."'
@@ -81,7 +86,7 @@
             var data = google.visualization.arrayToDataTable(countryGraphDates);
     
             var options = {
-              title: 'New COVID-19 Cases',
+              title: 'Confirmed COVID-19 Cases',
               curveType: 'function',
               legend: { position: 'bottom' }
             };

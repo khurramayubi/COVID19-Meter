@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="ShyftBaseCSS.css">
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+ 
+</head>
+<body>
+<img src="https://realeyesoptometry.com/wp-content/uploads/2020/05/header-1024x256.jpg" class="tempbtm">
+
+
+<h1>Corona Virus World Meter</h1>
+
+
+<div style="background-color: rgb(240, 205, 48); text-align: center;margin-bottom: 20px;margin-top:10px; margin-left:20%;margin-right:20%;padding: 10px; color: white;">COVID-19 CORONAVIRUS PANDEMIC</div>
+<div id="parent">
+
+    <div class="child"><b>Total Cases</b><p id="global-total-cases"></p></div>
+    <div class="child"><b>Total Deaths</b>b<p  id="global-total-deaths"></p></div>
+    <div class="child" ><b>Recovery Cases</b><p id="global-total-recovered"></p></div>
+
+</div>
+
+<div class="wrap" id="searchwrap">
+    <div class="search">
+        <form action="countrypage.php" method="POST">
+            <input type="text" name = "searchterm" class="searchTerm" placeholder="Search by Country" id="searchTerm">
+        </input>
+            <input type="submit" name="submit" >
+                <i class="fa fa-search"></i>
+            </input>
+        </form>
+
+    </div>
+</div>
+
+
+<table id="global-table">
+<tr>
+    <th>Country</th>
+    <th>New Confirmed</th>
+    <th>Total Confirmed</th>
+    <th>New Deaths</th>
+    <th>Total Deaths</th>
+    <th>New Recovered</th>
+    <th>Total Recovered</th>
+</tr>
+
+</table>
+
+
+<script>
+    let graphData = [["Country", "New Cases"]];
+
+    function getDataGlobal() {
+        let arrayKeys = ["Country", "NewConfirmed", "TotalConfirmed", "NewDeaths", "TotalDeaths", "NewRecovered", "TotalRecovered"];
+
+        $.get("https://api.covid19api.com/summary", function (data) {
+
+            document.getElementById("global-total-deaths").innerHTML= data.Global["TotalDeaths"];
+            document.getElementById("global-total-cases").innerHTML= data.Global["TotalConfirmed"];
+            document.getElementById("global-total-recovered").innerHTML= data.Global["TotalRecovered"];
+
+
+            let globalTable = document.getElementById("global-table");
+            let globalRow = globalTable.insertRow();
+            globalRow.style.backgroundColor="#DFDFDF";
+            for (i=0; i<arrayKeys.length; i++) {
+                let globalTableCell = globalRow.insertCell(i);
+                if (i==0) {
+                    globalTableCell.outerHTML = "<th>World</th>"
+                }
+                else {
+                    let textNode = document.createTextNode(data.Global[arrayKeys[i]]);
+                    if (arrayKeys[i]=="NewConfirmed" || arrayKeys[i]=="NewDeaths" || arrayKeys[i]=="NewRecovered") {
+                        textNode = document.createTextNode("+"+data.Global[arrayKeys[i]]);
+                    }
+                    globalTableCell.appendChild(textNode);
+
+                }
+            }
+            data.Countries.forEach(element => {
+
+                let newRow = globalTable.insertRow();
+                for (i=0; i<arrayKeys.length; i++) {
+                    let tableCell = newRow.insertCell(i);
+                    if (i==0) {
+                        tableCell.outerHTML = "<th>"+element[arrayKeys[i]]+"</th>"
+                    }
+
+                    else {
+                        let textNode = null;
+                        if (arrayKeys[i]=="NewConfirmed" || arrayKeys[i]=="NewDeaths" || arrayKeys[i]=="NewRecovered") {
+                            if (i==1) {
+                                tableCell.style.backgroundColor = "rgba(255, 255, 0, 0.6)";
+                                graphData.push([element[arrayKeys[0]],element[arrayKeys[i]]]);
+                            }
+                            else if (i==3) {
+                                tableCell.style.backgroundColor = "rgba(255, 0, 25, 0.60)";
+                            }
+                            else if (i==5) {
+                                tableCell.style.backgroundColor = "rgba(0, 128, 0, 0.60)";
+                            }
+                            textNode = document.createTextNode("+"+element[arrayKeys[i]]);
+                        }
+                        else {
+                            textNode = document.createTextNode(element[arrayKeys[i]]);
+                        }
+                        tableCell.appendChild(textNode);
+                    }
+                }
+            });
+
+        })
+
+
+        google.charts.load('current', {
+            'packages':['geochart'],
+            // Note: you will need to get a mapsApiKey for your project.
+            // See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
+            'mapsApiKey': 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'
+        });
+        google.charts.setOnLoadCallback(drawRegionsMap);
+
+        //Not showing all countries due to different naming conventions for the 2 APIs. Cn be easily fixed later.
+        function drawRegionsMap() {
+            var data = google.visualization.arrayToDataTable(graphData);
+            var options = {colorAxis: {colors: ['#EEEEEE', '#e31b23']},};
+
+            var chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
+
+            chart.draw(data, options);
+        }
+
+    }
+    getDataGlobal();
+
+
+    /*Sorting table*/
+    //Stackoverflow
+    const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+    const comparer = (idx, asc) => (a, b) => ((v1, v2) =>
+            v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+    )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+    // do the work...
+    document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+        const table = th.closest('table');
+        Array.from(table.querySelectorAll('tr:nth-child(n+2)'))
+            .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+            .forEach(tr => table.appendChild(tr) );
+    })));
+
+    /*Sorting done*/
+
+
+
+</script>
+<h1 style="text-align: center; margin-top: 200px"> GeoCharts </h1>
+<div class="graph-wrapper">
+    <h2><u>New cases worldwide</u></h2>
+    <div id="regions_div" style="width: 900px; height: 500px;"></div>
+
+</div>
+
+<div class="footer">
+    <p>COVID-19 Meter</p>
+  </div>
+
+</body>
+</html>

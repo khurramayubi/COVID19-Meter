@@ -41,6 +41,9 @@
 </div>
 
 <?php
+/* Selection of dates feature is not currently working properly. 
+    Need to grab dates from the form and then pass them for the graph generation. 
+*/
     if(isset($_POST['submit'])){
         $term = $_POST['searchterm'];
         echo "<script>document.getElementById('countryname').innerHTML = '".$term."'
